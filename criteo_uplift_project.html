@@ -7796,7 +7796,7 @@ a.anchor-link {
 <!-- End of mermaid configuration --></head>
 <body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=388bea1d">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=b2cc59fc">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7830,7 +7830,7 @@ the core case for measuring uplift instead of spending on everyone.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=02494a19">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=f3252de2">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7839,6 +7839,7 @@ the core case for measuring uplift instead of spending on everyone.</p>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># --- Setup -------------------------------------------------------------------</span>
+<span class="c1"># If running locally, install once:  pip install kagglehub numpy pandas scipy scikit-learn matplotlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">glob</span><span class="o">,</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
@@ -7861,7 +7862,7 @@ the core case for measuring uplift instead of spending on everyone.</p>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8b2ea2f1">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f54b1aad">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7870,10 +7871,15 @@ the core case for measuring uplift instead of spending on everyone.</p>
 <h2 id="Step-1-%E2%80%94-Load-the-data">Step 1 — Load the data<a class="anchor-link" href="#Step-1-%E2%80%94-Load-the-data">¶</a></h2><p>Each row is one user in a randomized experiment. The columns we use:
 <code>treatment</code> (1 = shown the ad, 0 = control), <code>conversion</code> (1 = bought),
 <code>visit</code> (1 = visited the site), and <code>f0</code>–<code>f11</code> (anonymized characteristics of the user).</p>
+<p><strong>How the load works:</strong> the function below first tries <strong><code>kagglehub</code></strong>, which downloads the real
+Criteo dataset (<code>arashnic/uplift-modeling</code>) and caches it. On Kaggle this works instantly; running
+locally, the first call asks for a free Kaggle API token (Kaggle → <em>Settings → Create New Token</em> →
+save the <code>kaggle.json</code>, or call <code>kagglehub.login()</code>). If neither the download nor a mounted Kaggle
+path is available, it builds a realistic stand-in with the same structure so the notebook always runs.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=dccc6cf8">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=9208fe61">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7882,19 +7888,35 @@ the core case for measuring uplift instead of spending on everyone.</p>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">load_criteo</span><span class="p">(</span><span class="n">max_rows</span><span class="o">=</span><span class="n">MAX_ROWS</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Load the real Criteo CSV if it's available; otherwise build a realistic stand-in."""</span>
-    <span class="n">known</span> <span class="o">=</span> <span class="s2">"/kaggle/input/uplift-modeling/criteo-uplift-v2.1.csv"</span>
-    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="p">[</span><span class="n">known</span><span class="p">]</span> <span class="o">+</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"/kaggle/input/**/*.csv"</span><span class="p">,</span> <span class="n">recursive</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Loading REAL Criteo data from: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-            <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-            <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">max_rows</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_rows</span><span class="p">:</span>
-                <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">max_rows</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">df</span><span class="p">,</span> <span class="kc">False</span>
+<span class="w">    </span><span class="sd">"""Load the real Criteo data via kagglehub or a mounted Kaggle path; else build a stand-in."""</span>
 
-    <span class="c1"># ---- Stand-in with the same structure (used only when the real file is absent) ----</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">"Real file not found -&gt; building a realistic stand-in with the same structure."</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_read</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Loading REAL Criteo data from: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">max_rows</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_rows</span><span class="p">:</span>            <span class="c1"># random sample for speed; set MAX_ROWS=None for all</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">max_rows</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">df</span><span class="p">,</span> <span class="kc">False</span>
+
+    <span class="c1"># 1) kagglehub — downloads and caches the dataset. Works on Kaggle out of the box; locally it</span>
+    <span class="c1">#    needs a free Kaggle API token the first time (see the note below). Install: pip install kagglehub</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">kagglehub</span>
+        <span class="n">folder</span> <span class="o">=</span> <span class="n">kagglehub</span><span class="o">.</span><span class="n">dataset_download</span><span class="p">(</span><span class="s2">"arashnic/uplift-modeling"</span><span class="p">)</span>
+        <span class="n">csvs</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="s2">"**"</span><span class="p">,</span> <span class="s2">"*.csv"</span><span class="p">),</span> <span class="n">recursive</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">csvs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_read</span><span class="p">(</span><span class="n">csvs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"kagglehub not reachable (</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">); trying a mounted Kaggle path..."</span><span class="p">)</span>
+
+    <span class="c1"># 2) dataset already attached inside a Kaggle notebook</span>
+    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"/kaggle/input/uplift-modeling/criteo-uplift-v2.1.csv"</span><span class="p">,</span>
+                 <span class="o">*</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"/kaggle/input/**/*.csv"</span><span class="p">,</span> <span class="n">recursive</span><span class="o">=</span><span class="kc">True</span><span class="p">)]:</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">_read</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+    <span class="c1"># ---- 3) Stand-in with the same structure (used only when the real file is absent) ----</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Real data not reachable -&gt; building a realistic stand-in with the same structure."</span><span class="p">)</span>
     <span class="n">n</span> <span class="o">=</span> <span class="n">max_rows</span> <span class="ow">or</span> <span class="mi">3_000_000</span>
     <span class="n">X</span> <span class="o">=</span> <span class="n">RNG</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="mi">12</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">"float32"</span><span class="p">)</span>
     <span class="n">treatment</span> <span class="o">=</span> <span class="p">(</span><span class="n">RNG</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.85</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">"int8"</span><span class="p">)</span>                       <span class="c1"># ~85% treated, like Criteo</span>
@@ -7925,7 +7947,8 @@ the core case for measuring uplift instead of spending on everyone.</p>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Real file not found -&gt; building a realistic stand-in with the same structure.
+<pre>kagglehub not reachable (ModuleNotFoundError); trying a mounted Kaggle path...
+Real data not reachable -&gt; building a realistic stand-in with the same structure.
 </pre>
 </div>
 </div>
@@ -8080,7 +8103,7 @@ Overall buy-rate: 0.286%   |   Overall visit-rate: 4.87%
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c82e310b">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=969049b8">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8093,7 +8116,7 @@ real (statistically significant) or just noise.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=4e94a14f">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=0cf6631d">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8140,7 +8163,7 @@ Is it real? z = 14.3, p &lt; 0.001 (yes, highly significant)
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=1c8b80a6">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=2774b428">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8175,7 +8198,7 @@ Is it real? z = 14.3, p &lt; 0.001 (yes, highly significant)
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a0841f7c">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=4ed6ebff">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8188,7 +8211,7 @@ interesting question begins: does it work on <em>everyone</em>, or just some peo
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=5ed78d57">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e2dbca8e">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8204,7 +8227,7 @@ number means "the ad really moves this person"; near zero means "don't bother."<
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=e141567e">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=8bc92ea2">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8248,7 +8271,7 @@ number means "the ad really moves this person"; near zero means "don't bother."<
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=918cf45e">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=40c0ae9d">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8261,7 +8284,7 @@ is any good, the real gap should climb from the low-score groups to the high-sco
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=fc4dd537">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=fe02ef6c">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8305,7 +8328,7 @@ is any good, the real gap should climb from the low-score groups to the high-sco
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=79334a10">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=78f2ffb6">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8318,7 +8341,7 @@ buying less. Those are people you specifically want to <em>stop</em> advertising
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=b86d7fea">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=bd4f5e8c">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8331,7 +8354,7 @@ everyone randomly" line, smart targeting beats blanket spending.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=eefd4952">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=e8801638">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8386,7 +8409,7 @@ everyone randomly" line, smart targeting beats blanket spending.</p>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=592d5126">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=1a9685b2">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
