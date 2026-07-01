@@ -271,3 +271,28 @@ print(f"Advertising to the top 30% most-persuadable captures ~{top30_capture:.0%
 # 95% confidence intervals (average effect); a T-learner built on gradient-boosted models
 # (per-person effect); and out-of-sample validation with an uplift-by-decile chart and a
 # Qini curve.
+
+# %% [markdown]
+# ## Limitations & next steps
+#
+# **Treatment vs. exposure.** In Criteo, `treatment = 1` means the advertiser entered the
+# real-time-bidding auction for that user; `exposure = 1` means the ad was actually shown
+# (auction won). Only a small share of treated users are truly exposed, so this measures
+# *intent-to-treat* — the effect of being **targeted** — which keeps randomization clean and
+# is the conservative, decision-relevant quantity. Conditioning on exposure would estimate the
+# effect of being **shown** the ad, but breaks the clean randomized comparison.
+#
+# **Rare outcome.** Conversion runs ~0.3%, so stable estimates need large samples: the full
+# ~14M-row run gives tight confidence intervals, while small subsamples are noisy. (I validated
+# the direction on a real 10k-row Criteo sample — the *visit* lift reproduces at p < 0.001 — but
+# 10k rows carry too few conversions to read the conversion lift, which is why the headline
+# numbers come from the full dataset.)
+#
+# **One uplift method.** I used a T-learner for interpretability. A natural next step is to
+# benchmark it against an S-learner, an X-learner, and a causal/uplift forest, comparing
+# Qini / AUUC to choose the most reliable ranker.
+#
+# **From conversions to profit.** With cost-per-impression and margin-per-conversion, the Qini
+# curve becomes a spend-optimization tool: solve for the audience cutoff that maximizes
+# incremental **profit**, not just incremental conversions — the form a retail-media team would
+# actually ship.
