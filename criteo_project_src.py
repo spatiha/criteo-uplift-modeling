@@ -275,24 +275,13 @@ print(f"Advertising to the top 30% most-persuadable captures ~{top30_capture:.0%
 # %% [markdown]
 # ## Limitations & next steps
 #
-# **Treatment vs. exposure.** In Criteo, `treatment = 1` means the advertiser entered the
-# real-time-bidding auction for that user; `exposure = 1` means the ad was actually shown
-# (auction won). Only a small share of treated users are truly exposed, so this measures
-# *intent-to-treat* — the effect of being **targeted** — which keeps randomization clean and
-# is the conservative, decision-relevant quantity. Conditioning on exposure would estimate the
-# effect of being **shown** the ad, but breaks the clean randomized comparison.
+# **Targeted vs. shown.** Criteo's `treatment` flag marks whether a user was *targeted* by the
+# ad; a separate `exposure` flag marks whether the ad was actually *shown*. I measured the effect
+# of being targeted, which keeps the treatment and control groups a clean, fair comparison.
 #
-# **Rare outcome.** Conversion runs ~0.3%, so stable estimates need large samples: the full
-# ~14M-row run gives tight confidence intervals, while small subsamples are noisy. (I validated
-# the direction on a real 10k-row Criteo sample — the *visit* lift reproduces at p < 0.001 — but
-# 10k rows carry too few conversions to read the conversion lift, which is why the headline
-# numbers come from the full dataset.)
+# **Rare outcome.** Only about 0.3% of users convert, so reliable numbers need a large sample —
+# the full ~14M-row dataset gives stable results, while small slices are noisy.
 #
-# **One uplift method.** I used a T-learner for interpretability. A natural next step is to
-# benchmark it against an S-learner, an X-learner, and a causal/uplift forest, comparing
-# Qini / AUUC to choose the most reliable ranker.
-#
-# **From conversions to profit.** With cost-per-impression and margin-per-conversion, the Qini
-# curve becomes a spend-optimization tool: solve for the audience cutoff that maximizes
-# incremental **profit**, not just incremental conversions — the form a retail-media team would
-# actually ship.
+# **Next steps.** With cost and margin figures, the same analysis becomes a budgeting tool —
+# finding the point where extra ad spend stops paying off. I'd also compare a couple of other
+# modeling approaches to see which best picks out the persuadable customers.

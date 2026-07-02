@@ -79,17 +79,14 @@ same structure so it always runs.
 
 ## Limitations & next steps
 
-- **Treatment vs. exposure.** In Criteo, `treatment` means the advertiser entered the ad
-  auction for a user, while `exposure` means the ad was actually shown. This analysis measures
-  *intent-to-treat* (the effect of being targeted), which keeps the randomization clean.
-- **Rare outcome.** Conversion is ~0.3%, so stable estimates need large samples — the full
-  ~14M-row run gives tight intervals. I validated the method on a real 10k-row Criteo sample
-  (the *visit* lift reproduces at p < 0.001); the headline conversion numbers come from the full
-  dataset.
-- **One uplift method.** I used a T-learner for interpretability; a natural next step is to
-  benchmark it against S-learner, X-learner, and causal-forest approaches on Qini / AUUC.
-- **From conversions to profit.** With cost and margin inputs, the Qini curve becomes a
-  spend-optimization tool — solving for the audience cutoff that maximizes incremental *profit*.
+- **Targeted vs. shown.** Criteo's `treatment` flag marks whether a user was *targeted* by the
+  ad; a separate `exposure` flag marks whether it was actually *shown*. This measures the effect
+  of being targeted, which keeps the treatment and control groups a clean, fair comparison.
+- **Rare outcome.** Only ~0.3% of users convert, so reliable numbers need a large sample — the
+  full ~14M-row dataset gives stable results, while small slices are noisier.
+- **Next steps.** With cost and margin figures, the same analysis becomes a budgeting tool that
+  finds the point where extra ad spend stops paying off; comparing a couple of other modeling
+  approaches would confirm which best picks out the persuadable customers.
 
 ## Methods
 
